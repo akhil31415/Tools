@@ -1,0 +1,162 @@
+DROP TABLE TBL_JBKDM_FFT005
+/
+CREATE TABLE TBL_JBKDM_FFT005
+(
+FLD_001_CONST		       			VARCHAR2(4) 	DEFAULT '6021'			 NOT NULL,
+FLD_002_BRN_NO 					VARCHAR2(4) 				 NOT NULL,
+FLD_003_CUST_NO			   		VARCHAR2(7) 				 NOT NULL,
+FLD_004_RD_APPL_NO            	VARCHAR2(4) 				 NOT NULL,
+FLD_005_CONST  					VARCHAR2(6) 	DEFAULT '000000'			 NOT NULL,
+FLD_006_RD_CCY       			VARCHAR2(3)  				 NOT NULL,
+FLD_007_RD_BRN_NO				VARCHAR2(4) 				 NOT NULL,
+FLD_008_CONST           			VARCHAR2(2) 	DEFAULT '42'			 NOT NULL,
+FLD_009_RD_ACCT_NO          		VARCHAR2(7)  			 	 NOT NULL,
+FLD_010_DR_ACCT_BRN_NO  			VARCHAR2(4) 				 NOT NULL,
+FLD_011_CONST   					VARCHAR2(2) 	DEFAULT '02'				 NOT NULL,
+FLD_012_DR_ACCT_NO		        VARCHAR2(7)  	NOT NULL,
+FLD_013_APPLN_DATE       			VARCHAR2(8)  		 NOT NULL,
+FLD_014_APPLN_TIME 				VARCHAR2(6)  		 NOT NULL,
+FLD_015_APPLN_UPD_DATE 			VARCHAR2(8)  		 NOT NULL,
+FLD_016_APPLN_UPD_TIME 			VARCHAR2(6)  		 NOT NULL,
+FLD_017_CAT_STATUS 				VARCHAR2(1)  		 NOT NULL,
+FLD_018_CAT_STATUS_DTLS 			VARCHAR2(2)  		 NOT NULL,
+FLD_019_RD_TIMING_TYPE 			VARCHAR2(1)  		 NOT NULL,
+FLD_020_RD_TIMING_TYPE_DTLS 		VARCHAR2(2)  		 NOT NULL,
+FLD_021_RD_AMT 					VARCHAR2(13)  	 NOT NULL,
+FLD_022_RD_MAX_IN_RATE_FLG        VARCHAR2(1)     NOT NULL,
+FLD_023_RD_MAX_RATE				VARCHAR2(9)     NOT NULL,
+FLD_024_RD_TARGET_AMT				VARCHAR2(13)	NOT NULL,
+FLD_025_CONST						VARCHAR2(1)		DEFAULT '0' NOT NULL,
+FLD_026_RD_MEMO					VARCHAR2(20)	NOT NULL,
+FLD_027_RD_LAST_TXN_DATE			VARCHAR2(8)		NOT NULL,
+FLD_028_RD_JUDGE_DATE				VARCHAR2(8)		NOT NULL,
+FLD_029_RD_NEXT_DEP_DATE			VARCHAR2(8)		NOT NULL,
+FLD_030_RD_AMT_JPY				VARCHAR2(13)	NOT NULL,
+FLD_031_RD_AMT_FCY				VARCHAR2(16)	NOT NULL,
+FLD_032_RD_CTR_FAILED_DEP			VARCHAR2(7)		NOT NULL,
+FLD_033_RD_CTR_SUCESS_DEP			VARCHAR2(7)		NOT NULL,
+FLD_034_RD_CANCEL_DATE			VARCHAR2(8)		NOT NULL,
+FLD_035_RD_CANCEL_TIME			VARCHAR2(6)		NOT NULL,
+FLD_036_RD_CANCEL_REASON			VARCHAR2(2)		NOT NULL,
+FLD_037_PREV_DEP_STATUS			VARCHAR2(2)		NOT NULL,
+FLD_038_CONT_DOC_FLAG				VARCHAR2(1)		NOT NULL,
+FLD_039_LAST_DEP_DATE				VARCHAR2(8)		NOT NULL,
+FLD_040_LAST_DEP_TIME				VARCHAR2(6)		NOT NULL,
+FLD_041_CONST						VARCHAR2(8)		DEFAULT '00000000' NOT NULL,
+FLD_042_CONST						VARCHAR2(8)		DEFAULT '00000000' NOT NULL,
+FLD_043_CTR_APPLN_UPD				VARCHAR2(7)		NOT NULL,		
+FLD_044_LAST_UPD_DATE				VARCHAR2(8)		NOT NULL,
+FLD_045_LAST_UPD_TIME				VARCHAR2(6)		NOT NULL,
+FLD_046_CONST						VARCHAR2(2)		DEFAULT '01' NOT NULL,
+FLD_047_DEP_AMT_BEF_CHNGE					VARCHAR2(13)		NOT NULL,
+FLD_048_INP_FLG_BEF_CHNGE					VARCHAR2(1)		NOT NULL,
+FLD_049_DEP_MAX_RAT_BEF_CHNGE					VARCHAR2(9)		NOT NULL,
+FLD_050_DEP_TAR_AMT_BEF_CHNGE					VARCHAR2(13)		NOT NULL,
+FLD_051_DEP_MEMO_BEF_CHNGE					VARCHAR2(20)		NOT NULL
+)tablespace FCBDATA
+/
+create index IN_TBL_JBKDM_FFT005_1 on TBL_JBKDM_FFT005 (FLD_002_BRN_NO)tablespace FCBINDX
+/
+-- Add comments to the columns 
+comment on column TBL_JBKDM_FFT005.FLD_001_CONST is 'Constant Field 1'
+/
+comment on column TBL_JBKDM_FFT005.FLD_002_BRN_NO is 'Branch Code'
+/
+comment on column TBL_JBKDM_FFT005.FLD_003_CUST_NO is 'Customer No.'
+/
+comment on column TBL_JBKDM_FFT005.FLD_004_RD_APPL_NO is 'RD Application No.'
+/
+comment on column TBL_JBKDM_FFT005.FLD_005_CONST is 'Constant Field 5'
+/
+comment on column TBL_JBKDM_FFT005.FLD_006_RD_CCY is 'RD Currency'
+/
+comment on column TBL_JBKDM_FFT005.FLD_007_RD_BRN_NO is 'Branch Code(RD Account Info.)'
+/
+comment on column TBL_JBKDM_FFT005.FLD_008_CONST is 'Constant Field 8'
+/
+comment on column TBL_JBKDM_FFT005.FLD_009_RD_ACCT_NO is 'Account No.(RD Account Info.)'
+/
+comment on column TBL_JBKDM_FFT005.FLD_010_DR_ACCT_BRN_NO is 'Branch Code (Debit Account Info.)'
+/
+comment on column TBL_JBKDM_FFT005.FLD_011_CONST is 'Constant Field 11'
+/
+comment on column TBL_JBKDM_FFT005.FLD_012_DR_ACCT_NO is 'Account No. (Debit Account Info.)'
+/
+comment on column TBL_JBKDM_FFT005.FLD_013_APPLN_DATE is 'Application Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_014_APPLN_TIME is 'Application Time'
+/
+comment on column TBL_JBKDM_FFT005.FLD_015_APPLN_UPD_DATE is 'Application Updated Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_016_APPLN_UPD_TIME is 'Application Updated Time'
+/
+comment on column TBL_JBKDM_FFT005.FLD_017_CAT_STATUS is 'Status Category '
+/
+comment on column TBL_JBKDM_FFT005.FLD_018_CAT_STATUS_DTLS is 'Status Category Details'
+/
+comment on column TBL_JBKDM_FFT005.FLD_019_RD_TIMING_TYPE is 'RD Timing Type'
+/
+comment on column TBL_JBKDM_FFT005.FLD_020_RD_TIMING_TYPE_DTLS is 'RD Timing Details'
+/
+comment on column TBL_JBKDM_FFT005.FLD_021_RD_AMT is 'RD Amount'
+/
+comment on column TBL_JBKDM_FFT005.FLD_022_RD_MAX_IN_RATE_FLG is 'RD Maximum Rate Input Flag'
+/
+comment on column TBL_JBKDM_FFT005.FLD_023_RD_MAX_RATE is 'RD Maximum Rate'
+/
+comment on column TBL_JBKDM_FFT005.FLD_024_RD_TARGET_AMT is 'RD Target Amount'
+/
+comment on column TBL_JBKDM_FFT005.FLD_025_CONST is 'Constant Field 25'
+/
+comment on column TBL_JBKDM_FFT005.FLD_026_RD_MEMO is 'RD Memo'
+/
+comment on column TBL_JBKDM_FFT005.FLD_027_RD_LAST_TXN_DATE is 'Last RD Successful Transaction Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_028_RD_JUDGE_DATE is 'RD Judgment Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_029_RD_NEXT_DEP_DATE is 'Next Deposit Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_030_RD_AMT_JPY is 'JPY Amount of Successful RDs'
+/
+comment on column TBL_JBKDM_FFT005.FLD_031_RD_AMT_FCY is 'FCY Amount of Successful RDs'
+/
+comment on column TBL_JBKDM_FFT005.FLD_032_RD_CTR_FAILED_DEP is 'Count of Failed Deposits'
+/
+comment on column TBL_JBKDM_FFT005.FLD_033_RD_CTR_SUCESS_DEP is 'Count of Successful Deposits'
+/
+comment on column TBL_JBKDM_FFT005.FLD_034_RD_CANCEL_DATE is 'RD Cancellation Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_035_RD_CANCEL_TIME is 'RD Cancellation Time'
+/
+comment on column TBL_JBKDM_FFT005.FLD_036_RD_CANCEL_REASON is 'Reason for Cancellation of RD Application'
+/
+comment on column TBL_JBKDM_FFT005.FLD_037_PREV_DEP_STATUS is 'Status of Previous Deposit'
+/
+comment on column TBL_JBKDM_FFT005.FLD_038_CONT_DOC_FLAG is 'Contract Document Necessity Flag'
+/
+comment on column TBL_JBKDM_FFT005.FLD_039_LAST_DEP_DATE is 'Last Deposit Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_040_LAST_DEP_TIME is 'Last Deposit Time'
+/
+comment on column TBL_JBKDM_FFT005.FLD_041_CONST is 'Constant Field 41'
+/
+comment on column TBL_JBKDM_FFT005.FLD_042_CONST is 'Constant Field 42'
+/
+comment on column TBL_JBKDM_FFT005.FLD_043_CTR_APPLN_UPD is 'Number of Application Updates'
+/
+comment on column TBL_JBKDM_FFT005.FLD_044_LAST_UPD_DATE is 'Last Updated Date'
+/
+comment on column TBL_JBKDM_FFT005.FLD_045_LAST_UPD_TIME is 'Last Updated Time'
+/
+comment on column TBL_JBKDM_FFT005.FLD_046_CONST is 'Constant Field 46'
+/
+comment on column TBL_JBKDM_FFT005.FLD_047_DEP_AMT_BEF_CHNGE is 'Sub Number'
+/
+comment on column TBL_JBKDM_FFT005.FLD_048_INP_FLG_BEF_CHNGE is 'Sub Number'
+/
+comment on column TBL_JBKDM_FFT005.FLD_049_DEP_MAX_RAT_BEF_CHNGE is 'Sub Number'
+/
+comment on column TBL_JBKDM_FFT005.FLD_050_DEP_TAR_AMT_BEF_CHNGE is 'Sub Number'
+/
+comment on column TBL_JBKDM_FFT005.FLD_051_DEP_MEMO_BEF_CHNGE is 'Sub Number'
+/

@@ -1,0 +1,152 @@
+CREATE OR REPLACE PACKAGE PK_JBKDM_SEC001 IS
+FUNCTION AP_JBKDM_SEC001(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) 
+RETURN NUMBER;
+END;
+/
+CREATE OR REPLACE PACKAGE BODY PK_JBKDM_SEC001 IS
+FUNCTION AP_JBKDM_SEC001(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) RETURN NUMBER IS	
+var_l_FLD_001_CUST_CONTRACT_NO	VARCHAR2(10);
+var_l_FLD_002_BRN_NO	VARCHAR2(4);
+var_l_FLD_003_CUST_NO	VARCHAR2(7);
+var_l_FLD_004_DAT_EFFECTIVE	VARCHAR2(8);
+var_l_count							number;
+exp_rec_error_log 			   exception;
+var_l_key_desc      		   dm_rec_error_log.key_id_desc%type;
+var_l_success_cnt  			   dm_stream_history.cnt_success_rec%type := 0;
+var_l_fail_cnt      		   dm_stream_history.cnt_failed_rec%type := 0;
+var_l_comments      		   varchar2(2000);
+var_l_ret_status    		   number;
+var_l_cod_proc_name dm_file_config.cod_proc_name%type := 'SEC001';
+CURSOR cur_cont_no IS
+SELECT CI_CUST_ADDN_DETLS.COD_CONTRACT_NO as contract_number ,
+LPAD(CI_CUSTMAST.COD_CC_HOMEBRN,4,0) as home_branch,
+SUBSTR(CI_CUSTMAST.COD_CUST_NATL_ID,4,7) as cod_cust_natl_id,
+TO_CHAR(CM_CUSTCARD_MAST.DAT_ISSUE,'YYYYMMDD') as issue_date
+FROM CI_CUST_ADDN_DETLS CI_CUST_ADDN_DETLS,
+CI_CUSTMAST CI_CUSTMAST,
+CM_CUSTCARD_MAST CM_CUSTCARD_MAST,
+CH_ACCT_MAST CH_ACCT_MAST
+WHERE CI_CUSTMAST.COD_CUST_ID = CI_CUST_ADDN_DETLS.COD_CUST_ID
+AND CI_CUSTMAST.COD_CUST_ID = CM_CUSTCARD_MAST.COD_CUST_ID
+AND CI_CUSTMAST.COD_ACCT_NO_DEFAULT = CH_ACCT_MAST.COD_ACCT_NO
+AND CH_ACCT_MAST.COD_ACCT_STAT NOT IN (1,5)
+AND CM_CUSTCARD_MAST.DAT_ISSUE = 
+(SELECT MAX(DAT_ISSUE) FROM CM_CUSTCARD_MAST A WHERE A.COD_CARD_NO = CM_CUSTCARD_MAST.COD_CARD_NO)
+AND CI_CUST_ADDN_DETLS.FLG_MNT_STATUS = 'A'
+AND CI_CUSTMAST.FLG_MNT_STATUS = 'A'
+AND CM_CUSTCARD_MAST.FLG_MNT_STATUS = 'A'
+AND CH_ACCT_MAST.FLG_MNT_STATUS = 'A'
+AND CH_ACCT_MAST.cod_cc_brn IN
+(SELECT cod_cc_brn
+from dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+and cod_stream = var_pi_stream_id);
+BEGIN
+BEGIN
+pk_jbkdm_common.ap_upd_stream_run_stat(var_l_cod_proc_name,var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while updating DM_STREAM_RESTART for running status for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+91);
+RETURN 1;
+END;
+BEGIN
+DELETE FROM TBL_JBKDM_SEC001 t
+WHERE t.FLD_002_BRN_NO IN
+(SELECT LPAD(cod_cc_brn, 4, '0')
+FROM dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+AND cod_stream = var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Delete  FAILED FOR TBL_JBKDM_SEC001 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+106);
+RETURN 1;
+END;
+FOR cur_txn IN cur_cont_no LOOP
+BEGIN
+var_l_FLD_001_CUST_CONTRACT_NO		:= cur_txn.contract_number;
+var_l_FLD_002_BRN_NO				:= cur_txn.home_branch;
+var_l_FLD_003_CUST_NO				:= cur_txn.cod_cust_natl_id;
+var_l_FLD_004_DAT_EFFECTIVE			:= cur_txn.issue_date;
+BEGIN
+INSERT INTO TBL_JBKDM_SEC001
+(	
+FLD_001_CUST_CONTRACT_NO,
+FLD_002_BRN_NO,
+FLD_003_CUST_NO,
+FLD_004_DAT_EFFECTIVE
+)
+VALUES
+( 
+var_l_FLD_001_CUST_CONTRACT_NO,
+var_l_FLD_002_BRN_NO,
+var_l_FLD_003_CUST_NO,
+var_l_FLD_004_DAT_EFFECTIVE
+);
+EXCEPTION
+WHEN OTHERS THEN
+var_l_comments := 'Failed to insert INTO TBL_JBKDM_SEC001 | ' ||
+SQLERRM;
+RAISE exp_rec_error_log;
+END;
+var_l_success_cnt := var_l_success_cnt + 1;
+EXCEPTION
+WHEN exp_rec_error_log THEN
+BEGIN
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc := 'Branch code = ' || cur_txn.home_branch || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'Customer contract number = '||cur_txn.contract_number || ', ' ||
+'Issue date = '||cur_txn.issue_date;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+160);
+RETURN 1;
+END;
+WHEN OTHERS THEN
+BEGIN
+var_l_comments := SUBSTR('Failed in FOR loop at line ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE || SQLERRM,
+1,2000);
+var_l_key_desc := 'Branch code = ' || cur_txn.home_branch || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'Customer contract number = '||cur_txn.contract_number || ', ' ||
+'Issue date = '||cur_txn.issue_date;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+182);
+RETURN 1;
+END;
+END;
+END LOOP;
+var_po_successcnt := var_l_success_cnt;
+var_po_errcnt     := var_l_fail_cnt;
+RETURN 0;
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'FAILED FOR AP_JBKDM_SEC001 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+195);
+RETURN 1;
+END;
+END;
+/

@@ -1,0 +1,346 @@
+CREATE OR REPLACE PACKAGE PK_JBKDM_FFT004 IS
+FUNCTION AP_JBKDM_FFT004(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) RETURN NUMBER;
+END; 
+/
+CREATE OR REPLACE PACKAGE BODY PK_JBKDM_FFT004 IS
+FUNCTION AP_JBKDM_FFT004(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) RETURN NUMBER IS
+var_l_fld_002_006_009_cod_brn  VARCHAR2(4);
+var_l_fld_003_011_cust_no      VARCHAR2(7);
+var_l_fld_004_appln_no         VARCHAR2(4);
+var_l_fld_005_curr_nam         VARCHAR2(3);
+var_l_fld_008_rd_acct_no       VARCHAR2(7);
+var_l_fld_012_dat_appln        VARCHAR2(8);
+var_l_fld_013_tim_appln        VARCHAR2(6);
+var_l_fld_014_dat_last_appln   VARCHAR2(8);
+var_l_fld_015_tim_last_appln   VARCHAR2(6);
+var_l_fld_016_stat_cat         VARCHAR2(1);
+var_l_fld_017_stat_cat_dtls    VARCHAR2(2);
+var_l_fld_018_rd_tim_typ       VARCHAR2(2);
+var_l_fld_019_rd_tim_dtls      VARCHAR2(2);
+var_l_fld_020_rd_amt           VARCHAR2(13);
+var_l_fld_021_rd_max_rat_flg   VARCHAR2(1);
+var_l_fld_022_rd_max_rat       VARCHAR2(9);
+var_l_fld_023_rd_target_amt    VARCHAR2(13);
+var_l_fld_025_rd_memo          VARCHAR2(20);
+var_l_fld_026_last_rd_txn_dat  VARCHAR2(8);
+var_l_fld_027_rd_judg_dat      VARCHAR2(8);
+var_l_fld_028_dat_next_dep     VARCHAR2(8);
+var_l_fld_029_jpy_amt_succ_rds VARCHAR2(13);
+var_l_fld_030_fcy_amt_succ_rds VARCHAR2(16);
+var_l_fld_031_cnt_fail_dep     VARCHAR2(7);
+var_l_fld_032_cnt_succ_dep     VARCHAR2(7);
+var_l_fld_033_rd_cancel_dat    VARCHAR2(8);
+var_l_fld_034_rd_cancel_tim    VARCHAR2(6);
+var_l_fld_035_cod_canc_reason  VARCHAR2(2);
+var_l_fld_036_cod_prevdepstat  VARCHAR2(2);
+var_l_fld_037_cont_doc_flg     VARCHAR2(1);
+var_l_fld_038_last_dep_dat     VARCHAR2(8);
+var_l_fld_039_last_dep_tim     VARCHAR2(6);
+var_l_fld_042_no_appln_upd     VARCHAR2(7);
+var_l_fld_043_dat_last_mnt     VARCHAR2(8);
+var_l_fld_044_tim_last_mnt     VARCHAR2(6);
+var_l_fld_046_sub_no           VARCHAR2(6);
+exp_rec_error_log EXCEPTION;
+var_l_key_desc      dm_rec_error_log.key_id_desc%TYPE;
+var_l_success_cnt   dm_stream_history.cnt_success_rec%TYPE := 0;
+var_l_fail_cnt      dm_stream_history.cnt_failed_rec%TYPE := 0;
+var_l_comments      VARCHAR2(2000);
+var_l_ret_status    NUMBER;
+var_l_cod_proc_name dm_file_config.cod_proc_name%TYPE := 'FFT004';
+CURSOR cur_fcy_rd_dtls IS
+SELECT RD_APPLN_MAST.COD_CC_BRN,
+RD_APPLN_MAST.COD_CUST_NATL_ID,
+RD_APPLN_MAST.COD_CUST_ID,
+RD_APPLN_MAST.COD_ACCT_NO,
+RD_APPLN_MAST.COD_APPLN_NO,
+BA_CCY_CODE.NAM_CCY_SHORT,
+RD_APPLN_MAST.COD_CCY,
+CH_ACCT_MAST.COD_PROD,
+RD_APPLN_MAST.DAT_TIM_APPLN,
+RD_APPLN_MAST.DAT_TIM_LAST_APPLN_UPD,
+RD_APPLN_MAST.COD_STATUS,
+RD_APPLN_MAST.COD_CURR_CYCLE,
+RD_APPLN_MAST.CTR_PROC_DAY,
+RD_APPLN_MAST.AMT_XFER_DEP,
+RD_APPLN_MAST.CTR_MAX_RATE,
+RD_APPLN_MAST.AMT_TARGET_DEP,
+RD_APPLN_MAST.TXT_MEMO,
+RD_APPLN_MAST.DAT_LAST_DEP,
+RD_APPLN_MAST.DAT_JUDG_SKIP,
+RD_APPLN_MAST.DAT_NEXT_DEP,
+RD_APPLN_MAST.AMT_TOT_DEP_LCY,
+RD_APPLN_MAST.AMT_TOT_DEP_FCY,
+RD_APPLN_MAST.CTR_DEP_FAIL,
+RD_APPLN_MAST.CTR_DEP_PROC,
+RD_APPLN_MAST.DAT_TIM_APPLN_CANCEL,
+RD_APPLN_MAST.COD_CANCEL_REASON,
+RD_APPLN_MAST.COD_LAST_DEP_STATUS,
+RD_APPLN_MAST.FLG_DOC_REQD,
+RD_APPLN_MAST.DAT_TIM_LAST_DEP_PROC,
+RD_APPLN_MAST.CTR_UPDAT_SRLNO,
+RD_APPLN_MAST.DAT_LAST_MNT
+FROM RD_APPLN_MAST RD_APPLN_MAST,
+CH_ACCT_MAST  CH_ACCT_MAST,
+BA_CCY_CODE   BA_CCY_CODE
+WHERE RD_APPLN_MAST.COD_ACCT_NO = CH_ACCT_MAST.COD_ACCT_NO
+AND RD_APPLN_MAST.COD_CURR_CYCLE <> 3 -- not AI
+AND RD_APPLN_MAST.COD_CCY = BA_CCY_CODE.COD_CCY
+AND CH_ACCT_MAST.COD_ACCT_STAT NOT IN (1, 5)
+AND CH_ACCT_MAST.FLG_MNT_STATUS = 'A'
+AND BA_CCY_CODE.FLG_MNT_STATUS = 'A'
+AND CH_ACCT_MAST.cod_cc_brn IN
+(SELECT cod_cc_brn
+FROM dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+AND cod_stream = var_pi_stream_id);
+BEGIN
+BEGIN
+pk_jbkdm_common.ap_upd_stream_run_stat(var_l_cod_proc_name,
+var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while updating DM_STREAM_RESTART for running status for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+146);
+END;
+BEGIN
+DELETE FROM TBL_JBKDM_FFT004 t
+WHERE t.fld_002_brn_no IN
+(SELECT LPAD(cod_cc_brn, 4, '0')
+FROM dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+AND cod_stream = var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Delete failed on TBL_JBKDM_FFT004 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+160);
+END;
+FOR cur_txn IN cur_fcy_rd_dtls LOOP
+BEGIN
+var_l_fld_046_sub_no := NULL;
+var_l_fld_002_006_009_cod_brn  := LPAD(cur_txn.COD_CC_BRN, 4, '0');
+var_l_fld_003_011_cust_no      := SUBSTR(cur_txn.COD_CUST_NATL_ID,
+4,
+7);
+var_l_fld_004_appln_no         := LPAD(cur_txn.COD_APPLN_NO, 4, '0');
+var_l_fld_005_curr_nam         := cur_txn.nam_ccy_short;
+var_l_fld_008_rd_acct_no       := SUBSTR(cur_txn.COD_CUST_NATL_ID,
+4,
+6) ||
+SUBSTR(LPAD(cur_txn.COD_PROD,
+3,
+0),
+2,
+1);
+var_l_fld_012_dat_appln        := TO_CHAR(cur_txn.DAT_TIM_APPLN,
+'YYYYMMDD');
+var_l_fld_013_tim_appln        := TO_CHAR(cur_txn.DAT_TIM_APPLN,
+'HH24MISS');
+var_l_fld_014_dat_last_appln   := CASE WHEN cur_txn.dat_tim_last_appln_upd IS NULL THEN TO_CHAR(cur_txn.dat_tim_appln,
+'YYYYMMDD') ELSE TO_CHAR(cur_txn.dat_tim_last_appln_upd, 'YYYYMMDD') END;
+var_l_fld_015_tim_last_appln   := CASE WHEN cur_txn.dat_tim_last_appln_upd IS NULL THEN TO_CHAR(cur_txn.dat_tim_appln,
+'HH24MISS') ELSE TO_CHAR(cur_txn.dat_tim_last_appln_upd, 'HH24MISS') END;
+var_l_fld_016_stat_cat         := CASE WHEN cur_txn.cod_status IN (2, 3, 4,
+5) THEN '2' ELSE '1' END;
+var_l_fld_017_stat_cat_dtls    := LPAD(cur_txn.COD_STATUS, 2, '0');
+var_l_fld_018_rd_tim_typ       := cur_txn.COD_CURR_CYCLE;
+var_l_fld_019_rd_tim_dtls      := LPAD(cur_txn.CTR_PROC_DAY, 2, '0');
+var_l_fld_020_rd_amt           := LPAD(cur_txn.AMT_XFER_DEP, 13, 0);
+var_l_fld_021_rd_max_rat_flg   := CASE WHEN cur_txn.ctr_max_rate IS NULL THEN '0' ELSE '1' END;
+var_l_fld_022_rd_max_rat       := CASE WHEN cur_txn.ctr_max_rate IS NULL THEN '000000000' ELSE LPAD(cur_txn.CTR_MAX_RATE * 100000,
+9, '0') END;
+var_l_fld_023_rd_target_amt    := CASE WHEN cur_txn.amt_target_dep IS NULL THEN '0000000000000' ELSE LPAD(cur_txn.AMT_TARGET_DEP,
+13, '0') END;
+var_l_fld_025_rd_memo          := CASE WHEN cur_txn.txt_memo IS NULL THEN REPLICATE(UNISTR('\3000'),
+20) ELSE RPAD(SUBSTRB(cur_txn.TXT_MEMO, 1, 20), 20, UNISTR('\3000')) END;
+var_l_fld_026_last_rd_txn_dat  := CASE WHEN cur_txn.DAT_TIM_LAST_DEP_PROC IS NULL THEN '00000000' ELSE TO_CHAR(cur_txn.DAT_TIM_LAST_DEP_PROC,
+'YYYYMMDD') END;
+var_l_fld_027_rd_judg_dat      := TO_CHAR(cur_txn.DAT_JUDG_SKIP,
+'YYYYMMDD');
+var_l_fld_028_dat_next_dep     := CASE WHEN cur_txn.dat_next_dep IS NULL THEN '00000000' ELSE TO_CHAR(cur_txn.DAT_NEXT_DEP,
+'YYYYMMDD') END;
+var_l_fld_029_jpy_amt_succ_rds := LPAD(cur_txn.AMT_TOT_DEP_LCY,
+13,
+'0');
+var_l_fld_030_fcy_amt_succ_rds := LPAD(TRUNC(cur_txn.amt_tot_dep_fcy),13,
+0) || RPAD(SUBSTR(cur_txn.amt_tot_dep_fcy-FLOOR(cur_txn.amt_tot_dep_fcy),INSTR(cur_txn.amt_tot_dep_fcy-FLOOR(cur_txn.amt_tot_dep_fcy),
+'.')+1),3,0);
+var_l_fld_031_cnt_fail_dep     := LPAD(cur_txn.CTR_DEP_FAIL, 7, 0);
+var_l_fld_032_cnt_succ_dep     := LPAD(cur_txn.CTR_DEP_PROC, 7, 0);
+var_l_fld_033_rd_cancel_dat    := CASE WHEN cur_txn.dat_tim_appln_cancel IS NULL THEN '00000000' ELSE TO_CHAR(cur_txn.DAT_TIM_APPLN_CANCEL,
+'YYYYMMDD') END;
+var_l_fld_034_rd_cancel_tim    := CASE WHEN cur_txn.dat_tim_appln_cancel IS NULL THEN '000000' ELSE TO_CHAR(cur_txn.DAT_TIM_APPLN_CANCEL,
+'HH24MISS') END;
+var_l_fld_035_cod_canc_reason  := CASE WHEN cur_txn.cod_cancel_reason IS NULL THEN '00' ELSE LPAD(cur_txn.COD_CANCEL_REASON,
+2, 0) END;
+var_l_fld_036_cod_prevdepstat  := CASE WHEN cur_txn.cod_last_dep_status IS NULL THEN '00' ELSE LPAD(cur_txn.COD_LAST_DEP_STATUS,
+2, 0) END;
+var_l_fld_037_cont_doc_flg     := CASE WHEN cur_txn.flg_doc_reqd = 'Y' THEN 1 ELSE 0 END;
+var_l_fld_038_last_dep_dat     := CASE WHEN cur_txn.dat_tim_last_dep_proc IS NULL THEN '00000000' ELSE TO_CHAR(cur_txn.dat_tim_last_dep_proc,
+'YYYYMMDD') END;
+var_l_fld_039_last_dep_tim     := CASE WHEN cur_txn.dat_tim_last_dep_proc IS NULL THEN '000000' ELSE TO_CHAR(cur_txn.dat_tim_last_dep_proc,
+'HH24MISS') END;
+var_l_fld_042_no_appln_upd     := LPAD(cur_txn.CTR_UPDAT_SRLNO,
+7,
+0);
+var_l_fld_043_dat_last_mnt     := TO_CHAR(cur_txn.DAT_LAST_MNT,
+'YYYYMMDD');
+var_l_fld_044_tim_last_mnt     := TO_CHAR(cur_txn.DAT_LAST_MNT,
+'HH24MISS');
+BEGIN
+SELECT COUNT(1)
+INTO var_l_fld_046_sub_no
+FROM RD_APPLN_MAST_HIST A
+WHERE A.COD_CUST_ID = cur_txn.cod_cust_id
+AND A.COD_APPLN_NO = cur_txn.cod_appln_no;
+var_l_fld_046_sub_no := LPAD(var_l_fld_046_sub_no, 6, 0);
+EXCEPTION
+WHEN OTHERS THEN
+var_l_comments := 'Select failed on rd_appln_mast_hist for cod_cust_id:' ||
+cur_txn.cod_cust_id || 'and appln_no:' ||
+cur_txn.cod_appln_no;
+RAISE exp_rec_error_log;
+END;
+BEGIN
+INSERT INTO TBL_JBKDM_FFT004
+(FLD_002_BRN_NO,
+FLD_003_CUST_NO,
+FLD_004_RD_APPL_NO,
+FLD_005_RD_CCY,
+FLD_006_RD_BRN_NO,
+FLD_008_RD_ACCT_NO,
+FLD_009_DR_ACCT_BRN_NO,
+FLD_011_DR_ACCT_NO,
+FLD_012_APPLN_DATE,
+FLD_013_APPLN_TIME,
+FLD_014_APPLN_UPD_DATE,
+FLD_015_APPLN_UPD_TIME,
+FLD_016_CAT_STATUS,
+FLD_017_CAT_STATUS_DTLS,
+FLD_018_RD_TIMING_TYPE,
+FLD_019_RD_TIMING_TYPE_DTLS,
+FLD_020_RD_AMT,
+FLD_021_RD_MAX_IN_RATE_FLG,
+FLD_022_RD_MAX_RATE,
+FLD_023_RD_TARGET_AMT,
+FLD_025_RD_MEMO,
+FLD_026_RD_LAST_TXN_DATE,
+FLD_027_RD_JUDGE_DATE,
+FLD_028_RD_NEXT_DEP_DATE,
+FLD_029_RD_AMT_JPY,
+FLD_030_RD_AMT_FCY,
+FLD_031_RD_CTR_FAILED_DEP,
+FLD_032_RD_CTR_SUCESS_DEP,
+FLD_033_RD_CANCEL_DATE,
+FLD_034_RD_CANCEL_TIME,
+FLD_035_RD_CANCEL_REASON,
+FLD_036_PREV_DEP_STATUS,
+FLD_037_CONT_DOC_FLAG,
+FLD_038_LAST_DEP_DATE,
+FLD_039_LAST_DEP_TIME,
+FLD_042_CTR_APPLN_UPD,
+FLD_043_LAST_UPD_DATE,
+FLD_044_LAST_UPD_TIME,
+FLD_046_SUB_NO)
+VALUES
+(var_l_fld_002_006_009_cod_brn,
+var_l_fld_003_011_cust_no,
+var_l_fld_004_appln_no,
+var_l_fld_005_curr_nam,
+var_l_fld_002_006_009_cod_brn,
+var_l_fld_008_rd_acct_no,
+var_l_fld_002_006_009_cod_brn,
+var_l_fld_003_011_cust_no,
+var_l_fld_012_dat_appln,
+var_l_fld_013_tim_appln,
+var_l_fld_014_dat_last_appln,
+var_l_fld_015_tim_last_appln,
+var_l_fld_016_stat_cat,
+var_l_fld_017_stat_cat_dtls,
+var_l_fld_018_rd_tim_typ,
+var_l_fld_019_rd_tim_dtls,
+var_l_fld_020_rd_amt,
+var_l_fld_021_rd_max_rat_flg,
+var_l_fld_022_rd_max_rat,
+var_l_fld_023_rd_target_amt,
+var_l_fld_025_rd_memo,
+var_l_fld_026_last_rd_txn_dat,
+var_l_fld_027_rd_judg_dat,
+var_l_fld_028_dat_next_dep,
+var_l_fld_029_jpy_amt_succ_rds,
+var_l_fld_030_fcy_amt_succ_rds,
+var_l_fld_031_cnt_fail_dep,
+var_l_fld_032_cnt_succ_dep,
+var_l_fld_033_rd_cancel_dat,
+var_l_fld_034_rd_cancel_tim,
+var_l_fld_035_cod_canc_reason,
+var_l_fld_036_cod_prevdepstat,
+var_l_fld_037_cont_doc_flg,
+var_l_fld_038_last_dep_dat,
+var_l_fld_039_last_dep_tim,
+var_l_fld_042_no_appln_upd,
+var_l_fld_043_dat_last_mnt,
+var_l_fld_044_tim_last_mnt,
+var_l_fld_046_sub_no);
+EXCEPTION
+WHEN OTHERS THEN          
+var_l_comments := 'Failed to insert into TBL_JBKDM_FFT004 |:' ||
+SQLERRM;
+RAISE exp_rec_error_log;
+END;
+var_l_success_cnt := var_l_success_cnt + 1;
+EXCEPTION
+WHEN exp_rec_error_log THEN
+BEGIN
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc   := pk_jbkdm_common.ap_get_key_val(cur_txn.cod_cust_id,
+cur_txn.cod_cust_natl_id,
+cur_txn.cod_acct_no,
+NULL);
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc || ' cod_appln_no=' ||cur_txn.cod_appln_no,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || ' and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc || ' cod_appln_no=' ||cur_txn.cod_appln_no,
+339);
+END;
+WHEN OTHERS THEN
+BEGIN
+var_l_comments := SUBSTR('Failed in FOR loop at line ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE || SQLERRM,
+1,2000);
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc   := pk_jbkdm_common.ap_get_key_val(cur_txn.cod_cust_id,
+cur_txn.cod_cust_natl_id,
+cur_txn.cod_acct_no,
+NULL);
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc || ' cod_appln_no=' ||cur_txn.cod_appln_no,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || ' and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc || ' cod_appln_no=' ||cur_txn.cod_appln_no,
+360);
+END;
+END;
+END LOOP;
+var_po_successcnt := var_l_success_cnt;
+var_po_errcnt     := var_l_fail_cnt;
+RETURN 0;
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'FAILED FOR AP_JBKDM_FFT004  for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+372);
+END;
+END;

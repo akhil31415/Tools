@@ -1,0 +1,163 @@
+CREATE OR REPLACE PACKAGE PK_JBKDM_JKW012 IS
+FUNCTION AP_JBKDM_JKW012(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) 
+RETURN NUMBER;
+END;
+/
+CREATE OR REPLACE PACKAGE BODY PK_JBKDM_JKW012 IS
+FUNCTION AP_JBKDM_JKW012(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) RETURN NUMBER IS	
+var_l_FLD_001_BRN_COD	VARCHAR2(4);
+var_l_FLD_002_CUST_NO	VARCHAR2(7);
+var_l_FLD_003_BENEF_INQ_CNT	VARCHAR2(2);
+var_l_FLD_005_BENEF_LOCL_FLG	VARCHAR2(1);
+var_l_FLD_006_BENEF_INQ_DAT	VARCHAR2(14);
+var_l_FLD_007_BENEF_LOCK_DAT	VARCHAR2(14);
+var_l_count							number;
+exp_rec_error_log 			   exception;
+var_l_key_desc      		   dm_rec_error_log.key_id_desc%type;
+var_l_success_cnt  			   dm_stream_history.cnt_success_rec%type := 0;
+var_l_fail_cnt      		   dm_stream_history.cnt_failed_rec%type := 0;
+var_l_comments      		   varchar2(2000);
+var_l_ret_status    		   number;
+var_l_cod_proc_name dm_file_config.cod_proc_name%type := 'JKW012';
+CURSOR cur_benef_inq IS
+SELECT  lpad(ci_custmast.cod_cc_homebrn,4,0) as home_branch,
+substr(ci_custmast.cod_cust_natl_id,4,7) as cod_cust_natl_id,
+lpad(ci_cust_benef_cntr_detls.cnsecutv_cntr,2,0) as consecutive_centre,
+decode(ci_cust_benef_cntr_detls.flg_lock,'Y','1','0') as flg_lock,
+to_char(ci_cust_benef_cntr_detls.dat_of_inq,'yyyyMMddhh24miss') as inquiry_date,
+to_char(ci_cust_benef_cntr_detls.dat_lock,'yyyyMMddhh24miss') as lock_date
+FROM ci_cust_benef_cntr_detls ci_cust_benef_cntr_detls,
+ci_custmast ci_custmast ,
+ch_acct_mast ch_acct_mast
+WHERE ci_cust_benef_cntr_detls.cod_cust_id = ci_custmast.cod_cust_id
+AND ci_custmast.flg_mnt_status = 'A'
+AND ci_custmast.cod_acct_no_default = ch_acct_mast.cod_acct_no
+AND ch_acct_mast.cod_acct_stat NOT IN (1,5)
+AND ch_acct_mast.flg_mnt_status = 'A'
+AND ch_acct_mast.cod_cc_brn IN
+(SELECT cod_cc_brn
+from dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+and cod_stream = var_pi_stream_id);
+BEGIN
+BEGIN
+pk_jbkdm_common.ap_upd_stream_run_stat(var_l_cod_proc_name,var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while updating DM_STREAM_RESTART for running status for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+89);
+RETURN 1;
+END;
+BEGIN
+DELETE FROM TBL_JBKDM_JKW012 t
+WHERE t.FLD_001_BRN_COD IN
+(SELECT LPAD(cod_cc_brn, 4, '0')
+FROM dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+AND cod_stream = var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Delete  FAILED FOR TBL_JBKDM_JKW012 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+104);
+RETURN 1;
+END;
+FOR cur_txn IN cur_benef_inq LOOP
+BEGIN
+var_l_FLD_001_BRN_COD				:= cur_txn.home_branch;
+var_l_FLD_002_CUST_NO				:= cur_txn.cod_cust_natl_id;
+var_l_FLD_003_BENEF_INQ_CNT 		:= cur_txn.consecutive_centre;
+var_l_FLD_005_BENEF_LOCL_FLG	:= cur_txn.flg_lock;
+var_l_FLD_006_BENEF_INQ_DAT			:= nvl(cur_txn.inquiry_date,'              ');
+var_l_FLD_007_BENEF_LOCK_DAT	:= nvl(cur_txn.lock_date,'              ');
+BEGIN
+INSERT INTO TBL_JBKDM_JKW012
+(	
+FLD_001_BRN_COD,
+FLD_002_CUST_NO,
+FLD_003_BENEF_INQ_CNT,
+FLD_005_BENEF_INQ_LOCL_FLG,
+FLD_006_BENEF_INQ_DAT,
+FLD_007_BENEF_INQ_LOCK_DAT,
+FLD_008_CONST
+)
+VALUES
+( 
+var_l_FLD_001_BRN_COD,
+var_l_FLD_002_CUST_NO,
+var_l_FLD_003_BENEF_INQ_CNT,
+var_l_FLD_005_BENEF_LOCL_FLG,
+var_l_FLD_006_BENEF_INQ_DAT,
+var_l_FLD_007_BENEF_LOCK_DAT,
+LPAD(' ',14,' ')
+);
+EXCEPTION
+WHEN OTHERS THEN
+var_l_comments := 'Failed to insert INTO TBL_JBKDM_JKW012 | ' ||
+SQLERRM;
+RAISE exp_rec_error_log;
+END;
+var_l_success_cnt := var_l_success_cnt + 1;
+EXCEPTION
+WHEN exp_rec_error_log THEN
+BEGIN
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc := 'Branch code = ' || cur_txn.home_branch || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'beneficiary inquiry count = '||cur_txn.consecutive_centre || ', ' ||
+'Flag lock = '||cur_txn.flg_lock || ', ' ||
+'Inquiry date = '||cur_txn.inquiry_date || ', ' ||
+'lock date = '||cur_txn.lock_date ;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+168);
+RETURN 1;
+END;
+WHEN OTHERS THEN
+BEGIN
+var_l_comments := SUBSTR('Failed in FOR loop at line ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE || SQLERRM,
+1,2000);
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc := 'Branch code = ' || cur_txn.home_branch || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'beneficiary inquiry count = '||cur_txn.consecutive_centre || ', ' ||
+'Flag lock = '||cur_txn.flg_lock || ', ' ||
+'Inquiry date = '||cur_txn.inquiry_date || ', ' ||
+'lock date = '||cur_txn.lock_date ;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+193);
+RETURN 1;
+END;
+END;
+END LOOP;
+var_po_successcnt := var_l_success_cnt;
+var_po_errcnt     := var_l_fail_cnt;
+RETURN 0;
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'FAILED FOR AP_JBKDM_JKW012 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+206);
+RETURN 1;
+END;
+END;
+/

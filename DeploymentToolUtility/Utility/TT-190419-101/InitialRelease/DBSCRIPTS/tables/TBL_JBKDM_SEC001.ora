@@ -1,0 +1,42 @@
+DROP TABLE TBL_JBKDM_SEC001
+/
+CREATE TABLE TBL_JBKDM_SEC001
+(
+FLD_001_CUST_CONTRACT_NO	VARCHAR2(10)		not null,
+FLD_002_BRN_NO	VARCHAR2(4)		not null,
+FLD_003_CUST_NO	VARCHAR2(7)		not null,
+FLD_004_DAT_EFFECTIVE	VARCHAR2(8)		not null,
+FLD_005_CONST	VARCHAR2(1) DEFAULT '0'	not null,
+FLD_006_CONST	VARCHAR2(20) DEFAULT '20210501210000000000'	not null,
+FLD_007_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_USR_ID              '	not null,
+FLD_008_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_SYSTEM              '	not null,
+FLD_009_CONST	VARCHAR2(20) DEFAULT '20210501210000000000'	not null,
+FLD_010_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_USR_ID              '	not null,
+FLD_011_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_SYSTEM              '	not null
+)tablespace FCBDATA
+/
+create index IN_TBL_JBKDM_SEC001 on TBL_JBKDM_SEC001 (FLD_002_BRN_NO)tablespace FCBINDX
+/
+-- Add comments to the columns 
+comment on column TBL_JBKDM_SEC001.FLD_001_CUST_CONTRACT_NO is 'Customer Contract Number'
+/
+comment on column TBL_JBKDM_SEC001.FLD_002_BRN_NO is 'Branch Code'
+/
+comment on column TBL_JBKDM_SEC001.FLD_003_CUST_NO is 'Customer Number'
+/
+comment on column TBL_JBKDM_SEC001.FLD_004_DAT_EFFECTIVE is 'Effective Date'
+/
+comment on column TBL_JBKDM_SEC001.FLD_005_CONST is 'Deletion Flag'
+/
+comment on column TBL_JBKDM_SEC001.FLD_006_CONST is 'Creation Date & Time '
+/
+comment on column TBL_JBKDM_SEC001.FLD_007_CONST is 'Creation User ID'
+/
+comment on column TBL_JBKDM_SEC001.FLD_008_CONST is 'Creation System'
+/
+comment on column TBL_JBKDM_SEC001.FLD_009_CONST is 'Update Date & Time'
+/
+comment on column TBL_JBKDM_SEC001.FLD_010_CONST is 'Update User ID'
+/
+comment on column TBL_JBKDM_SEC001.FLD_011_CONST is 'Update System '
+/

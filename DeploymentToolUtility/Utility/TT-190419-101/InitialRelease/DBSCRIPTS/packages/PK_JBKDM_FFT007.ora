@@ -1,0 +1,165 @@
+CREATE OR REPLACE PACKAGE PK_JBKDM_FFT007 IS
+FUNCTION AP_JBKDM_FFT007(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) 
+RETURN NUMBER;
+END;
+/
+CREATE OR REPLACE PACKAGE BODY PK_JBKDM_FFT007 IS
+FUNCTION AP_JBKDM_FFT007(var_pi_stream_id  IN NUMBER,
+var_pi_start_date IN DATE,
+var_pi_end_date   IN DATE,
+var_po_successcnt OUT NUMBER,
+var_po_errcnt     OUT NUMBER) RETURN NUMBER IS	
+var_l_FLD_001_BRN_COD	VARCHAR2(4);
+var_l_FLD_002_CUST_NO	VARCHAR2(7);
+var_l_FLD_007_CUST_NAME	VARCHAR2(60);
+var_l_FLD_008_DEP_CCY_COD	VARCHAR2(3);
+var_l_FLD_009_DEP_CCY_NAME	VARCHAR2(32);
+var_l_FLD_010_CONTRACT_DAT	VARCHAR2(8);
+var_l_FLD_011_DELIVERY_DAT	VARCHAR2(14);
+exp_rec_error_log 			   exception;
+var_l_key_desc      		   dm_rec_error_log.key_id_desc%type;
+var_l_success_cnt  			   dm_stream_history.cnt_success_rec%type := 0;
+var_l_fail_cnt      		   dm_stream_history.cnt_failed_rec%type := 0;
+var_l_comments      		   varchar2(2000);
+var_l_ret_status    		   number;
+var_l_cod_proc_name dm_file_config.cod_proc_name%type := 'FFT007';
+CURSOR cur_FCY_details IS
+SELECT lpad(b.cod_cc_homebrn,4,0) as branch_code,
+substr(b.cod_cust_natl_id,4,7) as cod_cust_natl_id,
+c.nam_cust_full as full_name,
+d.nam_ccy_short as english_currency, d.nam_currency as Deposit_Currency_Name ,
+to_char(a.dat_acct_open,'YYYYMMDD') as DAT_ACCT_OPEN
+FROM ch_acct_mast a, ci_custmast b, ci_custmast_nls c, ba_ccy_code d
+WHERE a.cod_cust = b.cod_cust_id
+AND c.cod_cust_id = b.cod_cust_id
+AND c.cod_lang = 'KNJ' 
+AND a.cod_ccy = d.cod_ccy
+AND a.cod_acct_stat NOT IN (1,5) 
+AND a.cod_ccy <> 106 
+AND a.flg_mnt_status = 'A' 
+AND b.flg_mnt_status = 'A'
+AND a.dat_acct_open > to_date('2013/02/09','YYYY/MM/DD')
+AND c.flg_mnt_status = 'A' 
+AND d.flg_mnt_status = 'A'
+AND a.cod_cc_brn IN
+(SELECT cod_cc_brn
+from dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+and cod_stream = var_pi_stream_id);
+BEGIN
+BEGIN
+pk_jbkdm_common.ap_upd_stream_run_stat(var_l_cod_proc_name,var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while updating DM_STREAM_RESTART for running status for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+92);
+RETURN 1;
+END;
+BEGIN
+DELETE FROM TBL_JBKDM_FFT007 t
+WHERE t.FLD_001_BRN_COD IN
+(SELECT LPAD(cod_cc_brn, 4, '0')
+FROM dm_stream_ctrl
+WHERE cod_proc_name = var_l_cod_proc_name
+AND cod_stream = var_pi_stream_id);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Delete  FAILED FOR TBL_JBKDM_FFT007 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+107);
+RETURN 1;
+END;
+FOR cur_txn IN cur_FCY_details LOOP
+BEGIN
+var_l_FLD_001_BRN_COD		:= cur_txn.branch_code;
+var_l_FLD_002_CUST_NO		:= cur_txn.cod_cust_natl_id;
+var_l_FLD_007_CUST_NAME		:= substrb(rpad(cur_txn.full_name,60,unistr('\3000')),
+1,60);
+var_l_FLD_008_DEP_CCY_COD	:= cur_txn.english_currency;
+var_l_FLD_009_DEP_CCY_NAME	:= substrb(rpad(cur_txn.Deposit_Currency_Name,32,unistr('\3000')),
+1,32);
+var_l_FLD_010_CONTRACT_DAT	:= cur_txn.DAT_ACCT_OPEN;
+var_l_FLD_011_DELIVERY_DAT	:= cur_txn.DAT_ACCT_OPEN||'999999';
+BEGIN
+INSERT INTO TBL_JBKDM_FFT007
+(	
+FLD_001_BRN_COD,
+FLD_002_CUST_NO,
+FLD_007_CUST_NAME,
+FLD_008_DEP_CCY_COD,
+FLD_009_DEP_CCY_NAME,
+FLD_010_CONTRACT_DAT,
+FLD_011_DELIVERY_DAT
+)
+VALUES
+( 
+var_l_FLD_001_BRN_COD,
+var_l_FLD_002_CUST_NO,
+var_l_FLD_007_CUST_NAME,
+var_l_FLD_008_DEP_CCY_COD,
+var_l_FLD_009_DEP_CCY_NAME,
+var_l_FLD_010_CONTRACT_DAT,
+var_l_FLD_011_DELIVERY_DAT
+);
+EXCEPTION
+WHEN OTHERS THEN
+var_l_comments := 'Failed to insert INTO TBL_JBKDM_FFT007 | ' ||
+SQLERRM;
+RAISE exp_rec_error_log;
+END;
+var_l_success_cnt := var_l_success_cnt + 1;
+EXCEPTION
+WHEN exp_rec_error_log THEN
+BEGIN
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc := 'Branch code = ' || cur_txn.branch_code || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'Currency name = '||cur_txn.Deposit_Currency_Name || ', ' ||
+'Account opening date = '||cur_txn.DAT_ACCT_OPEN ;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+170);
+RETURN 1;
+END;
+WHEN OTHERS THEN
+BEGIN
+var_l_comments := SUBSTR('Failed in FOR loop at line ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE || SQLERRM,
+1,2000);
+var_l_fail_cnt   := var_l_fail_cnt + 1;
+var_l_key_desc := 'Branch code = ' || cur_txn.branch_code || ', ' ||
+'Customer no = ' || cur_txn.cod_cust_natl_id || ', ' ||
+'Currency name = '||cur_txn.Deposit_Currency_Name || ', ' ||
+'Account opening date = '||cur_txn.DAT_ACCT_OPEN ;
+var_l_ret_status := pk_jbkdm_common.ap_log_error_rec(var_l_key_desc,
+SYSDATE,
+var_l_cod_proc_name,
+var_pi_stream_id,
+var_l_comments);
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'Failed while logging error record for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id || ' key id ' || var_l_key_desc,
+193);
+RETURN 1;
+END;
+END;
+END LOOP;
+var_po_successcnt := var_l_success_cnt;
+var_po_errcnt     := var_l_fail_cnt;
+RETURN 0;
+EXCEPTION
+WHEN OTHERS THEN
+ora_raiserror(SQLCODE, 'FAILED FOR AP_JBKDM_FFT007 for cod_proc_name:' || var_l_cod_proc_name || 'and stream id:' || var_pi_stream_id,
+206);
+RETURN 1;
+END;
+END;
+/

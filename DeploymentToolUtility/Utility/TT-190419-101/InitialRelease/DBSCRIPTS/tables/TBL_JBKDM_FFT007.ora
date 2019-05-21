@@ -1,0 +1,72 @@
+DROP TABLE TBL_JBKDM_FFT007
+/
+CREATE TABLE TBL_JBKDM_FFT007
+(
+FLD_001_BRN_COD	VARCHAR2(4)		not null,
+FLD_002_CUST_NO	VARCHAR2(7)		not null,
+FLD_003_CONST	VARCHAR2(2)	DEFAULT '01' not null,
+FLD_004_CONST	VARCHAR2(2)	DEFAULT '01' not null,
+FLD_005_CONST	VARCHAR2(3)	DEFAULT '001' not null,
+FLD_006_CONST	VARCHAR2(3)	DEFAULT '001' not null,
+FLD_007_CUST_NAME	VARCHAR2(60)		not null,
+FLD_008_DEP_CCY_COD	VARCHAR2(3)		not null,
+FLD_009_DEP_CCY_NAME	VARCHAR2(32)		not null,
+FLD_010_CONTRACT_DAT	VARCHAR2(8)		not null,
+FLD_011_DELIVERY_DAT	VARCHAR2(14)		not null,
+FLD_012_CONST	VARCHAR2(1)	DEFAULT '0'	not null,
+FLD_013_CONST	VARCHAR2(14) DEFAULT '00000000000000' not null,
+FLD_014_CONST	VARCHAR2(8)	DEFAULT '00000000' not null,
+FLD_015_CONST	VARCHAR2(1)	DEFAULT '0'	not null,
+FLD_016_CONST	VARCHAR2(20) DEFAULT '20210501210000000000'	not null,
+FLD_017_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_USR_ID              '	not null,
+FLD_018_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_SYSTEM              '	not null,
+FLD_019_CONST	VARCHAR2(20) DEFAULT '20210501210000000000'	not null,
+FLD_020_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_USR_ID              '	not null,
+FLD_021_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_SYSTEM              ' not null 
+)tablespace FCBDATA
+/
+create index IN_TBL_JBKDM_FFT007 on TBL_JBKDM_FFT007 (FLD_001_BRN_COD)tablespace FCBINDX
+/
+-- Add comments to the columns 
+comment on column TBL_JBKDM_FFT007.FLD_001_BRN_COD is 'Branch Code'
+/
+comment on column TBL_JBKDM_FFT007.FLD_002_CUST_NO is 'Customer No.'
+/
+comment on column TBL_JBKDM_FFT007.FLD_003_CONST is 'Field 3'
+/
+comment on column TBL_JBKDM_FFT007.FLD_004_CONST is 'Field 4'
+/
+comment on column TBL_JBKDM_FFT007.FLD_005_CONST is 'Field 5'
+/
+comment on column TBL_JBKDM_FFT007.FLD_006_CONST is 'Field 6'
+/
+comment on column TBL_JBKDM_FFT007.FLD_007_CUST_NAME is 'Customer Name'
+/
+comment on column TBL_JBKDM_FFT007.FLD_008_DEP_CCY_COD is 'Deposit Currency Code'
+/
+comment on column TBL_JBKDM_FFT007.FLD_009_DEP_CCY_NAME is 'Deposit CurrencyÅ@Name '
+/
+comment on column TBL_JBKDM_FFT007.FLD_010_CONTRACT_DAT is 'Contract Established Date'
+/
+comment on column TBL_JBKDM_FFT007.FLD_011_DELIVERY_DAT is 'Delivery Date and Time'
+/
+comment on column TBL_JBKDM_FFT007.FLD_012_CONST is 'Field 12'
+/
+comment on column TBL_JBKDM_FFT007.FLD_013_CONST is 'Field 13'
+/
+comment on column TBL_JBKDM_FFT007.FLD_014_CONST is 'Field 14'
+/
+comment on column TBL_JBKDM_FFT007.FLD_015_CONST is 'Field 15'
+/
+comment on column TBL_JBKDM_FFT007.FLD_016_CONST is 'Creation Date and Time (Timestamp)'
+/
+comment on column TBL_JBKDM_FFT007.FLD_017_CONST is 'Field 17'
+/
+comment on column TBL_JBKDM_FFT007.FLD_018_CONST is 'Field 18'
+/
+comment on column TBL_JBKDM_FFT007.FLD_019_CONST is 'Update Date and Time (Timestamp)'
+/
+comment on column TBL_JBKDM_FFT007.FLD_020_CONST is 'Field 20'
+/
+comment on column TBL_JBKDM_FFT007.FLD_021_CONST is 'Field 21'
+/

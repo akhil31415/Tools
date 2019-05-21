@@ -1,0 +1,57 @@
+DROP TABLE TBL_JBKDM_JKW012
+/
+CREATE TABLE TBL_JBKDM_JKW012
+(
+FLD_001_BRN_COD	VARCHAR2(4)		not null,
+FLD_002_CUST_NO	VARCHAR2(7)		not null,
+FLD_003_BENEF_INQ_CNT	VARCHAR2(2)		not null,
+FLD_004_CONST	VARCHAR2(2) DEFAULT '00'	not null,
+FLD_005_BENEF_INQ_LOCL_FLG	VARCHAR2(1)		not null,
+FLD_006_BENEF_INQ_DAT	VARCHAR2(14)		not null,
+FLD_007_BENEF_INQ_LOCK_DAT	VARCHAR2(14)		not null,
+FLD_008_CONST	VARCHAR2(14) not null,
+FLD_009_CONST	VARCHAR2(8) DEFAULT '00000000'	not null,
+FLD_010_CONST	VARCHAR2(1) DEFAULT '0'	not null,
+FLD_011_CONST	VARCHAR2(20) DEFAULT '20210501210000000000'	not null,
+FLD_012_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_USR_ID              '	not null,
+FLD_013_CONST	VARCHAR2(32) DEFAULT 'INIT_CREATE_SYSTEM              '	not null,
+FLD_014_CONST	VARCHAR2(20) DEFAULT '20210501210000000000' not null,
+FLD_015_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_USR_ID              ' not null,
+FLD_016_CONST	VARCHAR2(32) DEFAULT 'INIT_UPDATE_SYSTEM              '	not null
+)tablespace FCBDATA
+/
+create index IN_TBL_JBKDM_JKW012 on TBL_JBKDM_JKW012 (FLD_001_BRN_COD)tablespace FCBINDX
+/
+-- Add comments to the columns 
+comment on column TBL_JBKDM_JKW012.FLD_001_BRN_COD is 'Branch Code'
+/
+comment on column TBL_JBKDM_JKW012.FLD_002_CUST_NO is 'Customer No.'
+/
+comment on column TBL_JBKDM_JKW012.FLD_003_BENEF_INQ_CNT is 'Continuous Beneficiary Inquiry Count '
+/
+comment on column TBL_JBKDM_JKW012.FLD_004_CONST is 'Beneficiary Inquiry Count per Day'
+/
+comment on column TBL_JBKDM_JKW012.FLD_005_BENEF_INQ_LOCL_FLG is 'Beneficiary Inquiry Lock Flag'
+/
+comment on column TBL_JBKDM_JKW012.FLD_006_BENEF_INQ_DAT is 'Last Beneficiary Inquiry Date/Time'
+/
+comment on column TBL_JBKDM_JKW012.FLD_007_BENEF_INQ_LOCK_DAT is 'Last Beneficiary Inquiry Lock Date/Time'
+/
+comment on column TBL_JBKDM_JKW012.FLD_008_CONST is 'Last Beneficiary Inquiry Lock Cancellation Date/Time'
+/
+comment on column TBL_JBKDM_JKW012.FLD_009_CONST is 'Version'
+/
+comment on column TBL_JBKDM_JKW012.FLD_010_CONST is 'Deletion Flag'
+/
+comment on column TBL_JBKDM_JKW012.FLD_011_CONST is 'Creation Date/Time (Timestamp)'
+/
+comment on column TBL_JBKDM_JKW012.FLD_012_CONST is 'Creation User ID'
+/
+comment on column TBL_JBKDM_JKW012.FLD_013_CONST is 'Creation System'
+/
+comment on column TBL_JBKDM_JKW012.FLD_014_CONST is 'Update Date/Time (Timestamp)'
+/
+comment on column TBL_JBKDM_JKW012.FLD_015_CONST is 'Update User ID'
+/
+comment on column TBL_JBKDM_JKW012.FLD_016_CONST is 'Update System'
+/
