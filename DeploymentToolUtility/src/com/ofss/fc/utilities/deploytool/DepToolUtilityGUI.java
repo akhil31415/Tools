@@ -48,9 +48,10 @@ public class DepToolUtilityGUI {
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				try {
-					DepToolUtilityGUI window = new DepToolUtilityGUI();					
+					DepToolUtilityGUI window = new DepToolUtilityGUI();
 					window.frame.setVisible(true);
 
 				} catch (Exception e) {
@@ -68,11 +69,11 @@ public class DepToolUtilityGUI {
 		frame.setTitle("Deployment tool- For Jibun Bank Data Migration");
 		frame.setBounds(200, 200, 800, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(null);	
+		frame.getContentPane().setLayout(null);
 
-		conSole= new JTextArea();
+		conSole = new JTextArea();
 
-		//browse field
+		// browse field
 		textField = new JTextField();
 		textField.setBounds(151, 8, 450, 25);
 		frame.getContentPane().add(textField);
@@ -97,7 +98,6 @@ public class DepToolUtilityGUI {
 		});
 		btnBrowse.setBounds(620, 8, 100, 25);
 		frame.getContentPane().add(btnBrowse);
-
 
 		JLabel lblTargetFolder = new JLabel("Release Sheet   :");
 		lblTargetFolder.setBounds(37, 11, 104, 14);
@@ -131,28 +131,24 @@ public class DepToolUtilityGUI {
 		btnDeploy.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				//1- DB units 2-shell/java units 0-Both DB and shell/java
-				unitsToDeploy = rdbtnDbUnits.isSelected()? 1 : (rdbtnShellUnits.isSelected() ? 2 : 0);
-				deploymentTag= "Default";		// to put release sheet tag here
+				// 1- DB units 2-shell/java units 0-Both DB and shell/java
+				unitsToDeploy = rdbtnDbUnits.isSelected() ? 1 : (rdbtnShellUnits.isSelected() ? 2 : 0);
+				deploymentTag = "Default"; // to put release sheet tag here
 				conSole.setText(null);
 				try {
 					if (targetFile != null) {
 						errorCode = DepToolProcessor.startToolProcess(deploymentTag, targetFile, unitsToDeploy);
 						if (errorCode == 0) {
-							JOptionPane.showMessageDialog(frame, "Deployment Successful!");
+							JOptionPane.showMessageDialog(frame, "Deployment completed!");
 						} else {
 							JOptionPane.showMessageDialog(frame, "Error while deployment!");
-						} 
-					} else {
-						if (deploymentTag == null || deploymentTag.equals("")) {
-							JOptionPane.showMessageDialog(frame, "Deployment tag can't be black.");
-						} else if (targetFile == null || targetFile.equals("")) {
-							JOptionPane.showMessageDialog(frame, "Please select release sheet.");
 						}
-					}
-				} catch (SecurityException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
+						errorCode = DepToolProcessor.checkSpoolFile();
+						if (unitsToDeploy == 0 || unitsToDeploy == 1)
+							JOptionPane.showMessageDialog(frame, "Errors in Spool File: " + errorCode);
+					} else
+						JOptionPane.showMessageDialog(frame, "Please select release sheet.");
+				} catch (SecurityException | IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -162,8 +158,9 @@ public class DepToolUtilityGUI {
 
 		JButton btnViewLogs = new JButton("View Deployment Logs");
 		btnViewLogs.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				DepToolProcessor.displayDeploymentLog();				
+				DepToolProcessor.displayDeploymentLog();
 			}
 		});
 		btnViewLogs.setBounds(37, 150, 170, 30);
@@ -173,24 +170,19 @@ public class DepToolUtilityGUI {
 		btnExecute.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				deploymentTag= "execute";		// to put release sheet tag here
+				deploymentTag = "execute"; // to put release sheet tag here
 				conSole.setText(null);
 				try {
 					if (targetFile != null) {
 						errorCode = DepToolProcessor.startToolProcess(deploymentTag, targetFile, unitsToDeploy);
 						if (errorCode == 0) {
-							JOptionPane.showMessageDialog(null, "Execution Successful.");
-						}else  JOptionPane.showMessageDialog(null, "Error while Execution.");
-					} else {
-						if (deploymentTag == null || deploymentTag.equals("")) {
-							JOptionPane.showMessageDialog(frame, "Deployment tag can't be blank.");
-						} else if (targetFile == null || targetFile.equals("")) {
-							JOptionPane.showMessageDialog(frame, "Please select release sheet.");
-						}
-					}
-				} catch (SecurityException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
+							JOptionPane.showMessageDialog(null, "Execution completed.");
+						} else
+							JOptionPane.showMessageDialog(null, "Error while Execution.");
+					} else
+						JOptionPane.showMessageDialog(frame, "Please select release sheet.");
+
+				} catch (SecurityException | IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -202,9 +194,9 @@ public class DepToolUtilityGUI {
 		btnExecuteLogs.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {					
+				try {
 					DepToolProcessor.displayExecLog();
-				}catch(Exception exp) {
+				} catch (Exception exp) {
 					exp.printStackTrace();
 				}
 
@@ -213,14 +205,14 @@ public class DepToolUtilityGUI {
 		btnExecuteLogs.setBounds(37, 250, 170, 30);
 		frame.getContentPane().add(btnExecuteLogs);
 
-		//View property file button
+		// View property file button
 		JButton btnProperties = new JButton("View PropertiesFile");
 		btnProperties.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {					
+				try {
 					DepToolProcessor.displayPropertiesFile();
-				}catch(Exception exp) {
+				} catch (Exception exp) {
 					exp.printStackTrace();
 				}
 
@@ -229,14 +221,14 @@ public class DepToolUtilityGUI {
 		btnProperties.setBounds(37, 300, 170, 30);
 		frame.getContentPane().add(btnProperties);
 
-		//Clear Console button
+		// Clear Console button
 		JButton btnClearConsole = new JButton("Clear Console");
 		btnClearConsole.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {					
+				try {
 					conSole.setText(null);
-				}catch(Exception exp) {
+				} catch (Exception exp) {
 					exp.printStackTrace();
 				}
 			}
@@ -244,29 +236,28 @@ public class DepToolUtilityGUI {
 		btnClearConsole.setBounds(37, 400, 170, 30);
 		frame.getContentPane().add(btnClearConsole);
 
-
-		//console logs
-		conSole.setEditable(false);		
-		JScrollPane scroll = new JScrollPane(conSole, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// console logs
+		conSole.setEditable(false);
+		JScrollPane scroll = new JScrollPane(conSole, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scroll.setBounds(250, 120, 500, 330);
 		frame.getContentPane().add(scroll);
 
-		JTextAreaOutputStream out= new JTextAreaOutputStream(conSole);
-		try {
+		try (JTextAreaOutputStream out = new JTextAreaOutputStream(conSole)) {
 			System.setOut(new PrintStream(out));
 			System.setErr(new PrintStream(out));
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 
-		//Clear Console button
+		// Clear Console button
 		JButton btnHighlight = new JButton("Highlight Errors");
 		btnHighlight.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {					
+				try {
 					highLightErros(conSole, "Error");
-				}catch(Exception exp) {
+				} catch (Exception exp) {
 					exp.printStackTrace();
 				}
 			}
@@ -275,26 +266,28 @@ public class DepToolUtilityGUI {
 		frame.getContentPane().add(btnHighlight);
 	}
 
-	Highlighter.HighlightPainter myhighlighter = new CustomHighlighter(Color.orange);
+	Highlighter.HighlightPainter myHighlighter = new CustomHighlighter(Color.orange);
+
 	public void highLightErros(JTextArea console, String text) {
 
 		try {
-			Highlighter h=console.getHighlighter();
+			Highlighter h = console.getHighlighter();
 			h.removeAllHighlights();
-			int pos=0;					
+			int pos = 0;
 
-			while((pos=console.getText().indexOf(text,pos))>=0) {
-				h.addHighlight(pos, pos+text.length(), myhighlighter);
-				pos+=text.length();
+			while ((pos = console.getText().indexOf(text, pos)) >= 0) {
+				h.addHighlight(pos, pos + text.length(), myHighlighter);
+				pos += text.length();
 			}
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
 
-	}	
+	}
 
-	private class CustomHighlighter extends DefaultHighlighter.DefaultHighlightPainter{
+	private class CustomHighlighter extends DefaultHighlighter.DefaultHighlightPainter {
 		public CustomHighlighter(Color color) {
 			super(color);
 		}
-	}}
+	}
+}
