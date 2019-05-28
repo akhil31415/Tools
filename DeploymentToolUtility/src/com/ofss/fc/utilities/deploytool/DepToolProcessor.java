@@ -120,7 +120,7 @@ public class DepToolProcessor extends DeploymentConstants {
 				}
 
 				FileWriter fr = new FileWriter(sqlFile);
-				fr.write("SET DEFINE OFF \nSPOOL " + SPOOLFILE + "\nSET ECHO ON\n");
+				fr.write("SPOOL " + SPOOLFILE + "\nSET ECHO ON\n");
 
 				for (Map.Entry<Integer, String> entry : dbOrderMap.entrySet()) {
 					fr.write(entry.getValue());
